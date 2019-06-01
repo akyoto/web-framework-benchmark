@@ -5,8 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/aerogo/aero"
 	"github.com/gin-gonic/gin"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type (
@@ -526,6 +527,42 @@ func benchmarkRoutes(b *testing.B, router http.Handler, routes []*Route) {
 			router.ServeHTTP(w, r)
 		}
 	}
+}
+
+func loadAeroRoutes(app *aero.Application, routes []*Route) {
+	for _, r := range routes {
+		app.Router().Add(r.Method, r.Path, aeroHandler(r.Method, r.Path))
+	}
+}
+
+func aeroHandler(method, path string) aero.Handler {
+	return func(ctx aero.Context) error {
+		return ctx.String("OK")
+	}
+}
+
+func BenchmarkAeroStatic(b *testing.B) {
+	app := aero.New()
+	loadAeroRoutes(app, static)
+	benchmarkRoutes(b, app, static)
+}
+
+func BenchmarkAeroGitHubAPI(b *testing.B) {
+	app := aero.New()
+	loadAeroRoutes(app, githubAPI)
+	benchmarkRoutes(b, app, githubAPI)
+}
+
+func BenchmarkAeroGplusAPI(b *testing.B) {
+	app := aero.New()
+	loadAeroRoutes(app, gplusAPI)
+	benchmarkRoutes(b, app, gplusAPI)
+}
+
+func BenchmarkAeroParseAPI(b *testing.B) {
+	app := aero.New()
+	loadAeroRoutes(app, parseAPI)
+	benchmarkRoutes(b, app, parseAPI)
 }
 
 func loadEchoRoutes(e *echo.Echo, routes []*Route) {
